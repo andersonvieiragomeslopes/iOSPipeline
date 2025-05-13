@@ -9,6 +9,9 @@ on:
     branches:
       - master
 
+env:
+  MD_APPLE_SDK_ROOT: /Applications/Xcode_16.2.app
+
 jobs:
   build:
     runs-on: macos-latest
