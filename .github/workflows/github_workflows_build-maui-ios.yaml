@@ -31,81 +31,76 @@ jobs:
       run: dotnet workload install maui --source https://api.nuget.org/v3/index.json
 
     - name: Restaurar pacotes NuGet
-      run: dotnet restore iBike/iBike.sln
+      run: dotnet restore *.sln
 
-    - name: Verificar estrutura de diretórios
-      run: |
-        pwd
-        ls -la
-        ls -la iBike/
+    # - name: Verificar estrutura de diretórios
+    #   run: |
+    #     pwd
+    #     ls -la
+    #     ls -la iBike/
 
-    - name: Verificar existência do certificado e perfil de provisionamento
-      run: |
-        CERT_PATH=$(find . -name "certificate.p12" | head -n 1)
-        PROFILE_PATH=$(find . -name "Bicicreteiro_Prod.mobileprovision" | head -n 1)
-        if [ -z "$CERT_PATH" ]; then
-          echo "Erro: O arquivo certificate.p12 não foi encontrado na raiz ou subdiretórios. Arquivos encontrados:"
-          ls -la
-          ls -la iBike/
-          exit 1
-        fi
-        if [ -z "$PROFILE_PATH" ]; then
-          echo "Erro: O arquivo Bicicreteiro_Prod.mobileprovision não foi encontrado na raiz ou subdiretórios. Arquivos encontrados:"
-          ls -la
-          ls -la iBike/
-          exit 1
-        fi
-        echo "Certificado e perfil de provisionamento encontrados com sucesso."
+    # - name: Verificar existência do certificado e perfil de provisionamento
+    #   run: |
+    #     CERT_PATH=$(find . -name "certificate.p12" | head -n 1)
+    #     PROFILE_PATH=$(find . -name "Bicicreteiro_Prod.mobileprovision" | head -n 1)
+    #     if [ -z "$CERT_PATH" ]; then
+    #       echo "Erro: O arquivo certificate.p12 não foi encontrado na raiz ou subdiretórios. Arquivos encontrados:"
+    #       ls -la
+    #       ls -la iBike/
+    #       exit 1
+    #     fi
+    #     if [ -z "$PROFILE_PATH" ]; then
+    #       echo "Erro: O arquivo Bicicreteiro_Prod.mobileprovision não foi encontrado na raiz ou subdiretórios. Arquivos encontrados:"
+    #       ls -la
+    #       ls -la iBike/
+    #       exit 1
+    #     fi
+    #     echo "Certificado e perfil de provisionamento encontrados com sucesso."
 
-    - name: Instalar certificado
-      run: |
-        CERT_PATH=$(find . -name "certificate.p12" | head -n 1)
-        if [ -z "$CERT_PATH" ]; then
-          echo "Erro: Não foi possível localizar o arquivo certificate.p12."
-          ls -la
-          exit 1
-        fi
-        security create-keychain -p "" build.keychain
-        security default-keychain -s build.keychain
-        security unlock-keychain -p "" build.keychain
-        security import "$CERT_PATH" -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
-        security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+    # - name: Instalar certificado
+    #   run: |
+    #     CERT_PATH=$(find . -name "certificate.p12" | head -n 1)
+    #     if [ -z "$CERT_PATH" ]; then
+    #       echo "Erro: Não foi possível localizar o arquivo certificate.p12."
+    #       ls -la
+    #       exit 1
+    #     fi
+    #     security create-keychain -p "" build.keychain
+    #     security default-keychain -s build.keychain
+    #     security unlock-keychain -p "" build.keychain
+    #     security import "$CERT_PATH" -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+    #     security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-    - name: Instalar perfil de provisionamento
-      run: |
-        PROFILE_PATH=$(find . -name "Bicicreteiro_Prod.mobileprovision" | head -n 1)
-        if [ -z "$PROFILE_PATH" ]; then
-          echo "Erro: Não foi possível localizar o arquivo Bicicreteiro_Prod.mobileprovision."
-          ls -la
-          exit 1
-        fi
-        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+    # - name: Instalar perfil de provisionamento
+    #   run: |
+    #     PROFILE_PATH=$(find . -name "Bicicreteiro_Prod.mobileprovision" | head -n 1)
+    #     if [ -z "$PROFILE_PATH" ]; then
+    #       echo "Erro: Não foi possível localizar o arquivo Bicicreteiro_Prod.mobileprovision."
+    #       ls -la
+    #       exit 1
+    #     fi
+    #     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+    #     cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
     - name: Publish IPA para iOS
-      run: |
-        dotnet publish iBike/iBike.csproj -c Release -f net9.0-ios -o ./app-build/ \
-          --self-contained false \
-          -p:RuntimeIdentifier=ios-arm64 \
-          -p:ArchiveOnBuild=true \
-          -p:CodesignKey="Apple Distribution: Anderson Vieira Lopes (36P66442YM)" \
-          -p:CodesignProvision="Bicicreteiro Production"
+      run: dotnet build -f net9.0-ios 
+         
 
-    - name: Encontrar IPA gerado
-      id: find_ipa
-      run: |
-        IPA_PATH=$(find ./app-build -type f -name "*.ipa" | head -n 1)
-        if [ -z "$IPA_PATH" ]; then
-          echo "ERRO: Nenhum arquivo IPA encontrado!"
-          ls -la ./app-build/
-          exit 1
-        fi
-        echo "IPA_PATH=$IPA_PATH" >> $GITHUB_ENV
-        echo "IPA encontrado: $IPA_PATH"
+    # - name: Encontrar IPA gerado
+    #   id: find_ipa
+    #   run: |
+    #     IPA_PATH=$(find ./app-build -type f -name "*.ipa" | head -n 1)
+    #     if [ -z "$IPA_PATH" ]; then
+    #       echo "ERRO: Nenhum arquivo IPA encontrado!"
+    #       ls -la ./app-build/
+    #       exit 1
+    #     fi
+    #     echo "IPA_PATH=$IPA_PATH" >> $GITHUB_ENV
+    #     echo "IPA encontrado: $IPA_PATH"
 
-    - name: Fazer upload do IPA como artefato
-      uses: actions/upload-artifact@v4
-      with:
-        name: maui-ios-ipa
-        path: ${{ env.IPA_PATH }}
-        retention-days: 30
+    # - name: Fazer upload do IPA como artefato
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: maui-ios-ipa
+    #     path: ${{ env.IPA_PATH }}
+    #     retention-days: 30
