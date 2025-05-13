@@ -10,11 +10,11 @@ on:
       - master
 
 env:
-  MD_APPLE_SDK_ROOT: /Applications/Xcode_16.2.app
+  MD_APPLE_SDK_ROOT: /Applications/Xcode_16.3.app
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     steps:
     - name: Checkout do repositório
