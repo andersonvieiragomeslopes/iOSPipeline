@@ -42,6 +42,11 @@ jobs:
     - name: Restaurar pacotes NuGet
       run: dotnet restore *.sln
 
+    - name: Decodificar o arquivo .p12 a partir do Base64
+      run: |
+        echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+        ls -la certificate.p12
+
     - name: Verificar existência do certificado e perfil de provisionamento
       run: |
         CERT_PATH=$(find . -name "certificate.p12" | head -n 1)
